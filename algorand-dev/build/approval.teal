@@ -1,0 +1,187 @@
+#pragma version 5
+txn ApplicationID
+int 0
+==
+bnz main_l21
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l20
+txn OnCompletion
+int UpdateApplication
+==
+bnz main_l19
+txn OnCompletion
+int OptIn
+==
+bnz main_l18
+txn OnCompletion
+int CloseOut
+==
+bnz main_l17
+txn OnCompletion
+int NoOp
+==
+bnz main_l7
+err
+main_l7:
+txna ApplicationArgs 0
+byte "payme"
+==
+bnz main_l16
+txna ApplicationArgs 0
+byte "decline"
+==
+bnz main_l15
+txna ApplicationArgs 0
+byte "pay"
+==
+bnz main_l14
+txna ApplicationArgs 0
+byte "hour"
+==
+bnz main_l12
+err
+main_l12:
+callsub sub3
+main_l13:
+int 0
+return
+main_l14:
+callsub sub2
+b main_l13
+main_l15:
+callsub sub1
+b main_l13
+main_l16:
+callsub sub0
+b main_l13
+main_l17:
+int 0
+return
+main_l18:
+int 0
+return
+main_l19:
+int 0
+return
+main_l20:
+int 0
+return
+main_l21:
+byte "global_employer"
+byte ""
+app_global_put
+byte "employee"
+byte ""
+app_global_put
+byte "hours"
+int 0
+app_global_put
+byte "amount"
+int 0
+app_global_put
+byte "global_creator"
+txn Sender
+app_global_put
+byte "global_employer"
+byte "DNMDFULHZA2QP36U3PCFUEM4Y77LAZA6URGRBUOD3GUDSKCBIFSJAXC24U"
+app_global_put
+byte "employee"
+byte "2BX6AOEWH54BOIVUKYSZU52UXRSFKMVNGSDMUXDDRNYOC7QE4Q6TN657QI"
+app_global_put
+byte "amount"
+int 0
+app_global_put
+byte "hours"
+int 10
+app_global_put
+byte "amount"
+int 100
+app_global_put
+byte "Requested"
+byte "False"
+app_global_put
+int 1
+return
+int 1
+return
+sub0: // request_payment
+txn Sender
+byte "employee"
+app_global_get
+==
+assert
+byte "Requested"
+byte "True"
+app_global_put
+byte "hours"
+app_global_get
+byte "amount"
+app_global_get
+*
+store 1
+byte "amount"
+load 1
+app_global_put
+int 1
+return
+sub1: // decline
+retsub
+sub2: // send_pay
+byte "Requested"
+app_global_get
+byte "True"
+==
+txn Sender
+byte "global_employer"
+app_global_get
+==
+&&
+assert
+itxn_begin
+int pay
+itxn_field TypeEnum
+byte "amount"
+app_global_get
+global MinBalance
+-
+itxn_field Amount
+global CurrentApplicationAddress
+itxn_field Sender
+byte "employee"
+app_global_get
+itxn_field Receiver
+byte "employee"
+app_global_get
+itxn_field CloseRemainderTo
+int 0
+itxn_field Fee
+itxn_submit
+byte "amount"
+int 0
+app_global_put
+byte "Requested"
+byte "False"
+app_global_put
+byte "hours"
+int 0
+app_global_put
+int 1
+return
+sub3: // inc_hours
+byte "hours"
+app_global_get
+store 0
+load 0
+int 18446744073709551615
+<
+bz sub3_l2
+byte "hours"
+load 0
+int 1
++
+app_global_put
+sub3_l2:
+int 1
+return

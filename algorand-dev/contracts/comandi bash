@@ -1,0 +1,26 @@
+#entrare nel nodo
+./sandbox enter algod
+
+#aggiungere alle variabili gli account (to check with ls /data)
+Node#    . /data/vars.sh
+
+#buildare il contratto dal terminale di gitbash
+./build.sh  contracts.salary.pay_salary
+
+#fare il deploy del contratto. Il numero e tipo di variabili da salvare in global e local va specificato
+goal app create --creator $creatore --approval-prog /data/build/approval.teal --clear-prog /data/build/clear.teal --global-byteslices 4 --global-ints 4 --local-byteslices 0 --local-ints 0
+
+#Controlla se esiste e funziona (posso farlo anche da dappflow)
+goal app read --global --app-id 1 --guess-format
+
+#Inizializzare contratto
+goal app optin --from $creatore --app-id 1
+goal app optin --from $dipendente --app-id 1
+
+#invoca funzione contratto
+goal app call -f $dipendente --app-id 1 --app-arg str:"payme"
+
+#debugging
+goal app call -f $dipendente --app-id 1 --app-arg str:"payme" --dryrun-dump -o tx.dr
+tealdbg debug -d tx.dr --listen 0.0.0.0
+    su chrome --> about:inspect  listen on localhost:9392
